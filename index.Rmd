@@ -11,13 +11,13 @@ output: html_document
 library(dplyr)
 library(Seurat)
 library (patchwork)
-install.packages("BiocManager")
+library("BiocManager")
 BiocManager::install("SingleCellSignalR")
 ```
 
 ## Visualisation des données
 
-Malgré le fait que les données utilisée soient normalisées, il est toujours important de pouvoir visualiser les données avant manipulation
+Les données à analysée ont été préalablement normalisées et sont donc comparable pour l'analyse. Il est toujours important de pouvoir visualiser les données avant manipulation. Pour cela, nous avons décider de visualiser le nombre de gène détecter pour chaque cellule (nFeature_RNA), le nombre total de molécules détecter dans chaque cellules (nCount_RNA) et le pourcentage de mitochondrie dans la cellule (percent.mt).
 
 ```{r}
 data<-readRDS("C://Users//sandr//OneDrive//Bureau//Cours fac//M2//Bioanalyse, transcriptomique//Single cell//dossier//myeloid-cells.RDS")
@@ -26,6 +26,81 @@ VlnPlot(data, features=c("nFeature_RNA"), ncol=1)
 VlnPlot(data, features=c("nCount_RNA"), ncol=1)
 VlnPlot(data, features=c("percent.mt"), ncol=1)
 ```
+
+Pour l'ensemble des cellules analysées nous pouvons observer que les effectifs est relativement élevé sauf dans le cas de HN28 et HN7 qui ont des effectifs plus faible et cela pour l'ensemble des échantillons. Nous pouvons également observé que les données sont relativement bien répartie pour l'ensemble des échantillons nous permettant de dire que les cellules analysés sont dans l'ensemble en bon état (vivante et présente). Cependant lorsque l'on regarde le pourcentage de mitochondrie pour l'échantillon HN7 celui-ci à un taux compris entre 5 et 15% avec un peu plus de cellules dégradées.
+
+```{r}
+plot1 <- FeatureScatter(data, feature1="nCount_RNA", feature2="percent.mt")
+plot2 <- FeatureScatter(data, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+plot1 + plot2
+```
+
+Lorsque l'on combine les données en confondant les types cellulaire, on observe mieux certaines valeurs extrême. Afin d'éviter certains biais d'analyses nous allons effectué un filtre de ces données normalisées en retirant les valeurs les plus extrêmes en filtrant nos données.
+
+```{r}
+data[["reliable"]] <- data[["nCount_RNA"]]<=7500 & data[["percent.mt"]]<=7 # number of genes was imposed at loading
+plot3 <- FeatureScatter(data, feature1="nFeature_RNA", feature2="percent.mt", group.by="reliable")
+plot3
+```
+
+```         
+
+```
+
+```{r}
+data <- subset(data, subset=reliable)
+```
+
+```{r}
+data <- FindVariableFeatures(data, nfeatures=2000)
+top15 <- head(VariableFeatures(data), 15)
+top15
+
+```
+
+```{r}
+plot1 <- VariableFeaturePlot(data)
+plot2 <- LabelPoints(plot=plot1, points=top15, repel=TRUE)
+plot2
+```
+
+ACP
+
+On centre et réduit
+
+```{r}
+all.genes <- rownames(data)
+data <- ScaleData(data, features=all.genes)
+data <- RunPCA(data, features=VariableFeatures(data), ndims.print=1:3, nfeatures.print=10)
+```
+
+projection
+
+```{r}
+DimPlot(data, reduction="pca")
+```
+
+```{r}
+ElbowPlot(data)
+```
+
+clustering
+
+```{r}
+data <- FindNeighbors(data, dims=1:10)
+data <- FindClusters(data, resolution=0.5)
+```
+
+```{r}
+data <- RunUMAP(data, dims=1:10)
+
+```
+
+```{r}
+DimPlot(data, reduction="umap")
+```
+
+En combinaison avec le % de lectures mitochondriales, l'élimination des valeurs aberrantes de ces groupes permet de supprimer la plupart des doublets/cellules mortes/gouttelettes vides, ce qui explique pourquoi le filtrage est une étape de prétraitement courante.
 
 <http://rmarkdown.rstudio.com>.
 
