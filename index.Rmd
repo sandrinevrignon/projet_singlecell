@@ -120,25 +120,45 @@ Nous pouvons ainsi observer sur l'ACP que parmis 4 types cellulaires sélectionn
 cluster2.markers <- FindMarkers(data, ident.1=2, min.pct=0.25)
 head(cluster2.markers, n=5)
 ```
+#Recherche des marqueurs de gnène pour l'ensemble des population
+```{r}
+data.markers <- FindAllMarkers(data, only.pos=TRUE, min.pct=0.25, logfc.threshold=0.25)
+```
+```{r}
+data.markers %>%
+  group_by(cluster) %>%
+  slice_max(n=2, order_by=avg_log2FC)
+```
+#A modifier
+
+```{r}
+VlnPlot(data, features = c("CXCL2", "SPP1"))
+```
+
+```{r}
+FeaturePlot(data, features=c("CXCL9", "SPP1"))
+```
+
+
+```{r}
+# Extraire les données de comptage normalisées
+counts <- as.matrix(GetAssayData(data, layer = "counts"))
+cluster.num <- as.numeric(Idents(data))
+
+# Utiliser SingleCellSignalR pour détecter les interactions
+LR.inter <- cell_signaling(counts, rownames(counts), cluster.num, c.names = new.cluster.ids)
+
+# Visualiser toutes les interactions ligand-récepteur
+visualize_interactions(LR.inter)
+
+# Visualiser les interactions spécifiques pour un cluster donné (par ex., "Cluster 1")
+#visualize_interactions(LR.inter, show.in = "C 1-C 3", "C 1-C 4")
+print(LR.inter)
+names(LR.inter)
+```
+
 
 se di que les 4 groupes sont répartie de
 
 En combinaison avec le % de lectures mitochondriales, l'élimination des valeurs aberrantes de ces groupes permet de supprimer la plupart des doublets/cellules mortes/gouttelettes vides, ce qui explique pourquoi le filtrage est une étape de prétraitement courante.
 
-<http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
-```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
