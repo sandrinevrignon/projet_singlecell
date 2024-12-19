@@ -5,7 +5,7 @@ date: "2024-12-17"
 output: html_document
 ---
 
-## Installation library t
+## Installation library 
 
 ```{r}
 library(dplyr)
@@ -32,13 +32,13 @@ Pour l'ensemble des cellules analysées nous pouvons observer que les effectifs 
 ```{r}
 plot1 <- FeatureScatter(data, feature1="nCount_RNA", feature2="percent.mt")
 plot2 <- FeatureScatter(data, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
-plot1 + plot2
+plot1+plot2
 ```
 
-Lorsque l'on combine les données en confondant les types cellulaire, on observe mieux certaines valeurs extrême. Afin d'éviter certains biais d'analyses nous allons effectué un filtre de ces données normalisées en retirant les valeurs les plus extrêmes en filtrant nos données.
+Lorsque l'on combine les données en confondant les types cellulaire, on observe mieux certaines valeurs extrême. Afin d'éviter certains biais d'analyses nous allons effectué un filtre de ces données normalisées en retirant les valeurs les plus extrêmes en filtrant nos données. Pour cela, nous allons filtrer sur le nombre total de molécules afin que celui-ci soit inférieure à 25 000 et un pourcentage de mitochondrie inférieure à 10% ou les valeurs sont assez rare (nous prenons le risque de retirer certaines valeurs pour la population HN7 qui possède un taux de mitochondrie différents)
 
 ```{r}
-data[["reliable"]] <- data[["nCount_RNA"]]<=7500 & data[["percent.mt"]]<=7 # number of genes was imposed at loading
+data[["reliable"]] <- data[["nCount_RNA"]]<=25000 & data[["percent.mt"]]<=10 # number of genes was imposed at loading
 plot3 <- FeatureScatter(data, feature1="nFeature_RNA", feature2="percent.mt", group.by="reliable")
 plot3
 ```
@@ -50,6 +50,8 @@ plot3
 ```{r}
 data <- subset(data, subset=reliable)
 ```
+
+## Recherche de marqueur de type cellulaire
 
 ```{r}
 data <- FindVariableFeatures(data, nfeatures=2000)
