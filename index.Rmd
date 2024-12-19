@@ -5,7 +5,7 @@ date: "2024-12-17"
 output: html_document
 ---
 
-## Installation library 
+## Installation library
 
 ```{r}
 library(dplyr)
@@ -27,7 +27,7 @@ VlnPlot(data, features=c("nCount_RNA"), ncol=1)
 VlnPlot(data, features=c("percent.mt"), ncol=1)
 ```
 
-Pour l'ensemble des cellules analysées nous pouvons observer que les effectifs est relativement élevé sauf dans le cas de HN28 et HN7 qui ont des effectifs plus faible et cela pour l'ensemble des échantillons. Nous pouvons également observé que les données sont relativement bien répartie pour l'ensemble des échantillons nous permettant de dire que les cellules analysés sont dans l'ensemble en bon état (vivante et présente). Cependant lorsque l'on regarde le pourcentage de mitochondrie pour l'échantillon HN7 celui-ci à un taux compris entre 5 et 15% avec un peu plus de cellules dégradées.
+Pour l'ensemble des cellules analysées nous pouvons observer que les effectifs sont relativement élevés sauf dans le cas de HN28 et HN7 qui ont des effectifs plus faible et cela pour l'ensemble des échantillons. Nous pouvons également observé que les données sont relativement bien répartie pour l'ensemble des échantillons nous permettant de dire que les cellules analysés sont dans l'ensemble en bon état (vivante et présente). Cependant lorsque l'on regarde le pourcentage de mitochondrie pour l'échantillon HN7 celui-ci à un taux compris entre 5 et 15% avec un peu plus de cellules dégradées.
 
 ```{r}
 plot1 <- FeatureScatter(data, feature1="nCount_RNA", feature2="percent.mt")
@@ -35,16 +35,12 @@ plot2 <- FeatureScatter(data, feature1 = "nCount_RNA", feature2 = "nFeature_RNA"
 plot1+plot2
 ```
 
-Lorsque l'on combine les données en confondant les types cellulaire, on observe mieux certaines valeurs extrême. Afin d'éviter certains biais d'analyses nous allons effectué un filtre de ces données normalisées en retirant les valeurs les plus extrêmes en filtrant nos données. Pour cela, nous allons filtrer sur le nombre total de molécules afin que celui-ci soit inférieure à 25 000 et un pourcentage de mitochondrie inférieure à 10% ou les valeurs sont assez rare (nous prenons le risque de retirer certaines valeurs pour la population HN7 qui possède un taux de mitochondrie différents)
+Lorsque l'on combine les données en confondant les types cellulaire, on observe mieux certaines valeurs extrême. Afin d'éviter certains biais d'analyses nous avons effectué un filtre de ces données normalisées en retirant les valeurs les plus extrêmes. Pour cela, nous allons filtrer sur le nombre total de molécules afin que celui-ci soit inférieure à 25 000 et un pourcentage de mitochondrie inférieure à 10% ou les valeurs sont assez rare (nous prenons le risque de retirer certaines valeurs pour la population HN7 qui possède un taux de mitochondrie différents). Ces différents filtres nous permettrons ainsi une cohérence dans l'analyse des données.
 
 ```{r}
 data[["reliable"]] <- data[["nCount_RNA"]]<=25000 & data[["percent.mt"]]<=10 # number of genes was imposed at loading
 plot3 <- FeatureScatter(data, feature1="nFeature_RNA", feature2="percent.mt", group.by="reliable")
 plot3
-```
-
-```         
-
 ```
 
 ```{r}
@@ -53,6 +49,8 @@ data <- subset(data, subset=reliable)
 
 ## Recherche de marqueur de type cellulaire
 
+Afin de pouvoir déterminer les populations cellulaires spécifiques nous recherchons les gènes avec une variabilité d'expression spécifique en fonction de la population cellulaire analysée. Nous avons choisi de garder les paramètres par défaut utilisant les 2000 caractéristiques de gène.
+
 ```{r}
 data <- FindVariableFeatures(data, nfeatures=2000)
 top15 <- head(VariableFeatures(data), 15)
@@ -60,15 +58,23 @@ top15
 
 ```
 
+Ainsi nous pouvons ici répertorier les 15 premiers marqueurs spécifique à nos population cellulaires.
+
 ```{r}
 plot1 <- VariableFeaturePlot(data)
 plot2 <- LabelPoints(plot=plot1, points=top15, repel=TRUE)
 plot2
 ```
 
-ACP
+A travers ce graphique nous pouvons ainsi observer que les marqueurs sélectionnés représente bien des différences d'espression en fonction de la population cellulaires.
 
-On centre et réduit
+Ces données vont ainsi être utilisées afin de permettre les analyses multiple et déterminé les caractéristiques de nos population cellulaires *via* une ACP (Analyse en Composante Principal) dans un premier temps.
+
+## ACP
+
+Afin de permettre la réalisation de notre ACP nous avons réalisée une étape de pré-traitement des données grâce à une transfomation linéaire. Cette technique nous permettant d'effectuer une réduction dimentionnel des données, donnant un poids égale sur les données d'expression en évitant certains biais.
+
+Les données ont ensuite été centrée et reduite à travers une table matricielle
 
 ```{r}
 all.genes <- rownames(data)
@@ -76,17 +82,17 @@ data <- ScaleData(data, features=all.genes)
 data <- RunPCA(data, features=VariableFeatures(data), ndims.print=1:3, nfeatures.print=10)
 ```
 
-projection
+Avant d'être projeté à travers le graphique.
 
 ```{r}
 DimPlot(data, reduction="pca")
 ```
 
-```{r}
-ElbowPlot(data)
-```
+A travers ce graphique toutes les données sont représentées avec un mélange indistinct des types cellulaires.
 
-clustering
+Afin de pouvoir effectuer une meilleure visualisation nous effectuons une clusterisation des données
+
+## Clustering
 
 ```{r}
 data <- FindNeighbors(data, dims=1:10)
@@ -101,6 +107,22 @@ data <- RunUMAP(data, dims=1:10)
 ```{r}
 DimPlot(data, reduction="umap")
 ```
+
+Les données étant également difficilement interprétable nous avons donc décider de regarder uniquement 4 clusters
+
+```{r}
+resolution <- 0.1
+data <- FindClusters(data, resolution = resolution)
+while (length(unique(Idents(data))) != 4) {
+  resolution <- resolution + 0.05
+  data <- FindClusters(data, resolution = resolution)
+}
+cat("Résolution finale :", resolution, "avec", length(unique(Idents(data))), "clusters.\n")
+DimPlot(data, reduction = "umap", group.by = "seurat_clusters")
+DimPlot(data, reduction = "pca", group.by = "seurat_clusters")
+```
+
+Nous pouvons ainsi observer que les 4 groupes sont répartie de
 
 En combinaison avec le % de lectures mitochondriales, l'élimination des valeurs aberrantes de ces groupes permet de supprimer la plupart des doublets/cellules mortes/gouttelettes vides, ce qui explique pourquoi le filtrage est une étape de prétraitement courante.
 
