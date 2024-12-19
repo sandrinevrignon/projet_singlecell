@@ -20,31 +20,96 @@ BiocManager::install("SingleCellSignalR")
 Les données à analysée ont été préalablement normalisées et sont donc comparable pour l'analyse. Il est toujours important de pouvoir visualiser les données avant manipulation. Pour cela, nous avons décider de visualiser le nombre de gène détecter pour chaque cellule (nFeature_RNA), le nombre total de molécules détecter dans chaque cellules (nCount_RNA) et le pourcentage de mitochondrie dans la cellule (percent.mt).
 
 ```{r}
-data<-readRDS("C://Users//sandr//OneDrive//Bureau//Cours fac//M2//Bioanalyse, transcriptomique//Single cell//dossier//myeloid-cells.RDS")
-data[["percent.mt"]] <- PercentageFeatureSet(data, pattern="^MT-")  
-VlnPlot(data, features=c("nFeature_RNA"), ncol=1)
-VlnPlot(data, features=c("nCount_RNA"), ncol=1)
-VlnPlot(data, features=c("percent.mt"), ncol=1)
+myeloid<-readRDS("C://Users//sandr//OneDrive//Bureau//Cours fac//M2//Bioanalyse, transcriptomique//Single cell//dossier//myeloid-cells.RDS")
+myeloid[["percent.mt"]] <- PercentageFeatureSet(myeloid, pattern="^MT-")  
+VlnPlot(myeloid, features=c("nFeature_RNA"), ncol=1)
+VlnPlot(myeloid, features=c("nCount_RNA"), ncol=1)
+VlnPlot(myeloid, features=c("percent.mt"), ncol=1)
 ```
 
 Pour l'ensemble des cellules analysées nous pouvons observer que les effectifs sont relativement élevés sauf dans le cas de HN28 et HN7 qui ont des effectifs plus faible et cela pour l'ensemble des échantillons. Nous pouvons également observé que les données sont relativement bien répartie pour l'ensemble des échantillons nous permettant de dire que les cellules analysés sont dans l'ensemble en bon état (vivante et présente). Cependant lorsque l'on regarde le pourcentage de mitochondrie pour l'échantillon HN7 celui-ci à un taux compris entre 5 et 15% avec un peu plus de cellules dégradées.
 
 ```{r}
-plot1 <- FeatureScatter(data, feature1="nCount_RNA", feature2="percent.mt")
-plot2 <- FeatureScatter(data, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+plot1 <- FeatureScatter(myeloid, feature1="nCount_RNA", feature2="percent.mt")
+plot2 <- FeatureScatter(myeloid, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
 plot1+plot2
 ```
 
-Lorsque l'on combine les données en confondant les types cellulaire, on observe mieux certaines valeurs extrême. Afin d'éviter certains biais d'analyses nous avons effectué un filtre de ces données normalisées en retirant les valeurs les plus extrêmes. Pour cela, nous allons filtrer sur le nombre total de molécules afin que celui-ci soit inférieure à 25 000 et un pourcentage de mitochondrie inférieure à 10% ou les valeurs sont assez rare (nous prenons le risque de retirer certaines valeurs pour la population HN7 qui possède un taux de mitochondrie différents). Ces différents filtres nous permettrons ainsi une cohérence dans l'analyse des données.
+Lorsque l'on combine les données en confondant les types cellulaire, on observe mieux certaines valeurs extrême. Les données ont cependant été normalisées, cela nous permet ainsi de sous-entendre que les données ont été précédemment filtrée. Ainsi nous ne filtreront pas les données dans notre cas.
+
+## Réduction des dimensions
 
 ```{r}
-data[["reliable"]] <- data[["nCount_RNA"]]<=25000 & data[["percent.mt"]]<=10 # number of genes was imposed at loading
-plot3 <- FeatureScatter(data, feature1="nFeature_RNA", feature2="percent.mt", group.by="reliable")
-plot3
+DimPlot(myeloid, reduction = "umap", label = TRUE, pt.size = 0.5)
+DimPlot(myeloid, reduction = "tsne", label = TRUE, pt.size = 0.5)
+DimPlot(myeloid, reduction = "pca", label = TRUE, pt.size = 0.5)
+
+```
+
+## Identification des cluster et réduction à 4 clusters
+
+```{r}
+
+myeloid <- FindNeighbors(myeloid, dims = 1:10) 
+myeloid <- FindClusters(myeloid, resolution = 0.075)
+
+```
+
+## Renommation des clusters
+
+```{r}
+
+# Renommer les clusters en "Cluster 1" à "Cluster 4"
+new.cluster.ids <- paste("C",1:length(levels(myeloid))) # Génère les noms des clusters
+names(new.cluster.ids) <- levels(myeloid)
+myeloid <- RenameIdents(myeloid, new.cluster.ids)
+
 ```
 
 ```{r}
-data <- subset(data, subset=reliable)
+
+# Visualiser avec les nouveaux noms
+DimPlot(myeloid, reduction = "umap", label = TRUE, pt.size = 0.5)
+
+# Identifier les gènes marqueurs pour les clusters renommés
+myeloid.markers <- FindAllMarkers(myeloid, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
+
+# Visualiser les top marqueurs
+top10 <- myeloid.markers %>%
+  group_by(cluster) %>%
+  top_n(n = 10, wt = avg_log2FC)
+
+DoHeatmap(myeloid, features = top10$gene) + NoLegend()
+
+# Visualiser les gènes d'intérêt (SPP1 et CXCL9)
+FeaturePlot(myeloid, features = c("SPP1", "CXCL9"))
+
+# Ajouter un ViolinPlot pour CXCL9 et SPP1
+VlnPlot(myeloid, features = c("CXCL9", "SPP1"), group.by = "seurat_clusters", pt.size = 0)
+
+# Installation et utilisation de SingleCellSignalR
+if (!requireNamespace("BiocManager", quietly = TRUE)) {
+  install.packages("BiocManager")
+}
+BiocManager::install("SingleCellSignalR")
+
+library(SingleCellSignalR)
+
+# Extraire les données de comptage normalisées
+counts <- as.matrix(GetAssayData(myeloid, layer = "counts"))
+cluster.num <- as.numeric(Idents(myeloid))
+
+# Utiliser SingleCellSignalR pour détecter les interactions
+LR.inter <- cell_signaling(counts, rownames(counts), cluster.num, c.names = new.cluster.ids)
+
+# Visualiser toutes les interactions ligand-récepteur
+visualize_interactions(LR.inter)
+
+# Visualiser les interactions spécifiques pour un cluster donné (par ex., "Cluster 1")
+#visualize_interactions(LR.inter, show.in = "C 1-C 3", "C 1-C 4")
+print(LR.inter)
+names(LR.inter)
+
 ```
 
 ## Recherche de marqueur de type cellulaire
@@ -122,7 +187,7 @@ DimPlot(data, reduction = "umap", group.by = "seurat_clusters")
 DimPlot(data, reduction = "pca", group.by = "seurat_clusters")
 ```
 
-Nous pouvons ainsi observer que les 4 groupes sont répartie de
+Nous pouvons ainsi observer que les 4 groupes se détachent répartie de
 
 En combinaison avec le % de lectures mitochondriales, l'élimination des valeurs aberrantes de ces groupes permet de supprimer la plupart des doublets/cellules mortes/gouttelettes vides, ce qui explique pourquoi le filtrage est une étape de prétraitement courante.
 
