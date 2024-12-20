@@ -18,7 +18,7 @@ BiocManager::install("SingleCellSignalR")
 
 ## Visualisation des données
 
-Les données à analysée ont été préalablement normalisées et sont donc comparable pour l'analyse. Il est toujours important de pouvoir visualiser les données avant manipulation. Pour cela, nous avons décider de visualiser le nombre de gène détecter pour chaque cellule (nFeature_RNA), le nombre total de molécules détecter dans chaque cellules (nCount_RNA) et le pourcentage de mitochondrie dans la cellule (percent.mt).
+Les données à analyser ont été préalablement normalisées et sont donc comparables pour l'analyse. Il est toujours important de visualiser les données avant manipulation. Pour cela, nous avons décidé de visualiser le nombre de gènes détectés pour chaque cellule (nFeature_RNA), le nombre total de molécules détectées dans chaque cellule (nCount_RNA) et le pourcentage de mitochondrie dans la cellule (percent.mt).
 
 ```{r}
 data<-readRDS("C://Users//sandr//OneDrive//Bureau//Cours fac//M2//Bioanalyse, transcriptomique//Single cell//dossier//myeloid-cells.RDS")
@@ -28,7 +28,7 @@ VlnPlot(data, features=c("nCount_RNA"), ncol=1)
 VlnPlot(data, features=c("percent.mt"), ncol=1)
 ```
 
-Pour l'ensemble des cellules analysées nous pouvons observer que les effectifs sont relativement élevés sauf dans le cas de HN28 et HN7 qui ont des effectifs plus faible et cela pour l'ensemble des échantillons. Nous pouvons également observé que les données sont relativement bien répartie pour l'ensemble des échantillons nous permettant de dire que les cellules analysés sont dans l'ensemble en bon état (vivante et présente). Cependant lorsque l'on regarde le pourcentage de mitochondrie pour l'échantillon HN7 celui-ci à un taux compris entre 5 et 15% avec un peu plus de cellules dégradées.
+Pour l'ensemble des cellules analysées, nous pouvons observer que les effectifs sont relativement élevés sauf dans le cas de HN28 et HN7 qui ont des effectifs plus faibles et cela pour l'ensemble des échantillons. Nous pouvons également observer que les données sont relativement bien réparties pour l'ensemble des échantillons nous permettant de dire que les cellules analysés sont dans l'ensemble en bon état (vivante et présente). Cependant lorsque l'on regarde le pourcentage de mitochondrie pour l'échantillon HN7 celui-ci à un taux compris entre 5 et 15% avec un peu plus de cellules dégradées.
 
 ```{r}
 plot1 <- FeatureScatter(data, feature1="nCount_RNA", feature2="percent.mt")
@@ -36,11 +36,11 @@ plot2 <- FeatureScatter(data, feature1 = "nCount_RNA", feature2 = "nFeature_RNA"
 plot1+plot2
 ```
 
-Lorsque l'on combine les données en confondant les types cellulaire, on observe mieux certaines valeurs extrême. Les données ont cependant été normalisées, cela nous permet ainsi de sous-entendre que les données ont été précédemment filtrée. Ainsi nous ne filtreront pas les données dans notre cas.
+Lorsque l'on combine les données en confondant les types cellulaires, on observe mieux certaines valeurs extrêmes. Etant donné que les données ont été précédemment manipulées lors de la normalisation, nous supposons que celles-ci ont également été filtré avant normalisation. Ainsi nous ne filtreront pas les données dans notre cas et prenons l'ensemble de ces données à cette étape.
 
 ## Recherche de marqueur de type cellulaire
 
-Afin de pouvoir déterminer les populations cellulaires spécifiques nous recherchons les gènes avec une variabilité d'expression spécifique en fonction de la population cellulaire analysée. Nous avons choisi de garder les paramètres par défaut utilisant les 2000 caractéristiques de gène.
+Afin de pouvoir déterminer les populations cellulaires spécifiques, nous recherchons les gènes avec une variabilité d'expression spécifique en fonction de la population cellulaire analysée. Nous avons choisi de garder les paramètres par défaut utilisant les 2000 caractéristiques de gène.
 
 ```{r}
 data <- FindVariableFeatures(data, nfeatures=2000)
@@ -49,7 +49,7 @@ top15
 
 ```
 
-Ainsi nous pouvons ici répertorier les 15 premiers marqueurs spécifique à nos population cellulaires.
+Ainsi nous pouvons ici répertorier les 15 premiers marqueurs spécifiques à nos population cellulaires.
 
 ```{r}
 plot1 <- VariableFeaturePlot(data)
@@ -57,15 +57,15 @@ plot2 <- LabelPoints(plot=plot1, points=top15, repel=TRUE)
 plot2
 ```
 
-A travers ce graphique nous pouvons ainsi observer que les marqueurs sélectionnés représente bien des différences d'espression en fonction de la population cellulaires.
+A travers ce graphique, nous pouvons ainsi observer que les marqueurs sélectionnés présentent bien des différences d'expression en fonction de la population cellulaire avec une variance résiduelle supérieure à 800 dans le cas de COL1A1 et des moyennes géométiques d'expression supérieures à 10.
 
-Ces données vont ainsi être utilisées afin de permettre les analyses multiple et déterminé les caractéristiques de nos population cellulaires *via* une ACP (Analyse en Composante Principal) dans un premier temps.
+Ces données vont ainsi être utilisées afin de permettre les analyses multiples et déterminer les caractéristiques de nos populations cellulaires *via* une ACP (Analyse en Composantes Principales) dans un premier temps.
 
 ## ACP
 
-Afin de permettre la réalisation de notre ACP nous avons réalisée une étape de pré-traitement des données grâce à une transfomation linéaire. Cette technique nous permettant d'effectuer une réduction dimentionnel des données, donnant un poids égale sur les données d'expression en évitant certains biais.
+Afin de permettre la réalisation de notre ACP, nous avons réalisé une étape de pré-traitement des données grâce à une transfomation linéaire. Cette technique nous permettant d'effectuer une réduction dimentionnelle des données, donnant un poids égal sur les données d'expression en évitant certains biais sur les résultats.
 
-Les données ont ensuite été centrée et reduite à travers une table matricielle
+Les données ont ensuite été centrées et reduites en utilisant une table matricielle
 
 ```{r}
 all.genes <- rownames(data)
@@ -73,13 +73,13 @@ data <- ScaleData(data, features=all.genes)
 data <- RunPCA(data, features=VariableFeatures(data), ndims.print=1:3, nfeatures.print=10)
 ```
 
-Avant d'être projeté à travers le graphique.
+Avant d'être projeté à travers un graphique. contenant les deux premières composantes
 
 ```{r}
 DimPlot(data, reduction="pca")
 ```
 
-A travers ce graphique toutes les données sont représentées avec un mélange indistinct des types cellulaires.
+A travers ce graphique toutes les données sont représentées avec un mélange indistinct des types cellulaires. Ici, aucun groupe n'est clairement mis en évidence. 
 
 Afin de pouvoir effectuer une meilleure visualisation nous effectuons une clusterisation des données
 
@@ -99,7 +99,9 @@ data <- RunUMAP(data, dims=1:10)
 DimPlot(data, reduction="umap")
 ```
 
-La représentation UMAP permet de distingué différents types cellulaires répartie le long des deux dimension de la représentation UMAP. Afin que le traitement des données soient plus simple nous avons décider de réduire nos données à 4 clusters
+Cette représentation permet de distinguer différents types cellulaires répartis le long des deux dimensions de la représentation UMAP. Un groupe en particulier se détache des autres (6) et semble être différents. Malgrè cela les types cellulaires même regroupé semble se distinguer. Afin que le traitement des données soit plus simple, nous avons décider de réduire nos données en 4 clusters.
+
+#Affichage en fonction de 4 clusters
 
 ```{r}
 resolution <- 0.1
@@ -113,13 +115,25 @@ DimPlot(data, reduction = "umap", group.by = "seurat_clusters")
 DimPlot(data, reduction = "pca", group.by = "seurat_clusters")
 ```
 
-Nous pouvons ainsi observer sur l'ACP que parmis 4 types cellulaires sélectionné nous distinguons 3 types cellulaires qui se répartissent en 3 groupes (0, 1 et 2) le quatrième groupe (3) se mélange au 3 autres. Cependant lorsque l'on pratique une analyse multimodal de ces données grâce à une réduction UMAP nous pouvons observer que 4 groupes cellulaires se distinguent bien. Le groupe 0 contenant le plus de données
+Nous pouvons ainsi observer sur l'ACP que parmis les 4 clusters sélectionnés nous distinguons 3 types cellulaires qui se répartissent en 3 groupes (0, 1 et 2) le quatrième groupe (3) se confondant aux 3 autres.
+Lorsque l'on regarde cette représentation en format UMAP nous pouvons observer 4 groupes bien distincts. Les types cellulaires 0,1 et 2 étant très proche l'un des autres et le cluster 3 qui est excentré par rapport à ce groupe. 
 
-#
+Etant données que nous disposons de groupe distinct au sein de l'UMAP nous allons ensuite chercher les gènes spécifiques à chacun de ces groupes afin de pouvoir identifier les types cellulaires présents
+
+#Détermination des gènes spécifique à chaque groupe
+
 ```{r}
 cluster2.markers <- FindMarkers(data, ident.1=2, min.pct=0.25)
 head(cluster2.markers, n=5)
 ```
+Ainsi parmi les gènes déterminé nous retrouvons les gènes suivants:
+  - GZMB: (Granzime B) qui est exprimé par les lymphocytes T cytotoxique (CTL) et les cellules NK (Natural Killers)
+  - JCHAIN (chaîne de jonction): qui est composant protéique exprimé dans les lymphocyte B.
+  -LILRA4:
+
+C'est gènes nous permettent ainsi de mettre en évidence à quel groupe immunitaire appartienne chaque type cellulaire de notre UMAP
+  
+
 #Recherche des marqueurs de gnène pour l'ensemble des population
 ```{r}
 data.markers <- FindAllMarkers(data, only.pos=TRUE, min.pct=0.25, logfc.threshold=0.25)
@@ -132,13 +146,13 @@ data.markers %>%
 #A modifier
 
 ```{r}
-VlnPlot(data, features = c("CXCL2", "SPP1"))
+VlnPlot(data, features = c("CXCL9", "SPP1","COL1A1"))
 ```
 
 ```{r}
-FeaturePlot(data, features=c("CXCL9", "SPP1"))
+FeaturePlot(data, features=c("GZMB"))
 ```
-
+CD68 et CD14 spécifique des granulocytes et monocyte
 
 ```{r}
 # Extraire les données de comptage normalisées
@@ -157,6 +171,18 @@ print(LR.inter)
 names(LR.inter)
 ```
 
+```{r}
+counts <- as.matrix(GetAssayData(object=data, slot="counts"))
+counts[1:10,1:5]
+q <- apply(counts, 2, function(x) quantile(x[x>0],0.99))
+ncounts <- log(1+sweep(counts, 2, q/median(q), "/"))
+ncounts[1:10,1:5]
+cluster.num <- as.numeric(Idents(data))
+LR.inter <- cell_signaling(ncounts, rownames(ncounts), cluster.num, c.names=new.cluster.ids)
+visualize_interactions(LR.inter)
+visualize_interactions(LR.inter, show.in=c("B-NK"))
+
+```
 
 se di que les 4 groupes sont répartie de
 
