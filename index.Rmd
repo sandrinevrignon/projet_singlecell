@@ -129,7 +129,8 @@ head(cluster2.markers, n=5)
 Ainsi parmi les gènes déterminé nous retrouvons les gènes suivants:
   - GZMB: (Granzime B) qui est exprimé par les lymphocytes T cytotoxique (CTL) et les cellules NK (Natural Killers)
   - JCHAIN (chaîne de jonction): qui est composant protéique exprimé dans les lymphocyte B.
-  -LILRA4:
+  -LILRA4 (Leukocyte immunoglobulin-like receptor subfamily A member 4) : gène qui est préférentiellement exprimée dans les cellules dendritiques plasmacytoïdes (PDC).
+  -ITM2C: EN COURS ARRET ICI
 
 C'est gènes nous permettent ainsi de mettre en évidence à quel groupe immunitaire appartienne chaque type cellulaire de notre UMAP
   
