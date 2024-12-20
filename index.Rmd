@@ -128,14 +128,14 @@ head(cluster2.markers, n=5)
 ```
 Ainsi parmi les gènes déterminé nous retrouvons les gènes suivants:
   - GZMB: (Granzime B) qui est exprimé par les lymphocytes T cytotoxique (CTL) et les cellules NK (Natural Killers)
-  - JCHAIN (chaîne de jonction): qui est composant protéique exprimé dans les lymphocyte B.
-  -LILRA4 (Leukocyte immunoglobulin-like receptor subfamily A member 4) : gène qui est préférentiellement exprimée dans les cellules dendritiques plasmacytoïdes (PDC).
-  -ITM2C: EN COURS ARRET ICI
+  - JCHAIN (chaîne de jonction): qui est composant protéique exprimé pour les immunoglobuline.
+  -LILRA4 (Leukocyte immunoglobulin-like receptor subfamily A member 4) : gène qui est préférentiellement exprimée chez les leucocytes et plus directement les macrophages.
+  -ITM2C (Integral Membrane Protein 2C): intervient dans la signalisation cellulaire et la régulation de la réponse immunitaire
+  TSPAN13 (Tetraspanin-13): joue un rôle dans la modulation de la signalisation cellulaire, l'adhésion et la migration des cellules immunitaires
 
-C'est gènes nous permettent ainsi de mettre en évidence à quel groupe immunitaire appartienne chaque type cellulaire de notre UMAP
-  
+C'est gènes nous permettent ainsi de mettre en évidence à quel groupe immunitaire appartiennent chaque type cellulaire de notre UMAP. Cependant seule il ne sont pas spécifiques à nos groupe et il faut que nous recherchions des marqueurs de ces gènes pour l'ensemble de notre population nous permettant de définir les types cellulaires spécifiques à nos groupe.
 
-#Recherche des marqueurs de gnène pour l'ensemble des population
+#Recherche des marqueurs de gène pour l'ensemble des population
 ```{r}
 data.markers <- FindAllMarkers(data, only.pos=TRUE, min.pct=0.25, logfc.threshold=0.25)
 ```
@@ -144,33 +144,43 @@ data.markers %>%
   group_by(cluster) %>%
   slice_max(n=2, order_by=avg_log2FC)
 ```
+Les marqueurs ainsi retrouvé sont les suivants:
+  -CFD (Complement Factor D):  retrouvé dans les macrophages, neutrophiles et cellules endothéliales.
+  -CXCL2 (C-X-C Motif Chemokine Ligand 2): retrouvé dans les Neutrophiles, monocytes, et macrophages.
+  -CCL19 (C-C Motif Chemokine Ligand 19): retrouvé dans Lymphocytes T, cellules dendritiques, et lymphocytes B
+  -LAD1 (Leukocyte Adhesion Deficiency 1): retrouvé dans les leucocytes
+  -PACSIN1 (Protein Kinase C and Casein Kinase Substrate In Neurons 1): retrouvé dans les macrophages, dendritiques.
+  -TCL1A (T-cell Leukemia 1A): retrouvé dans les cellules dendritique
+  -UBE2C (Ubiquitin-Conjugating Enzyme E2C): non spécifiques
+  -CDC2 (Cell Division Cycle 2):retrouvé dans les cellules des lymphocytes T
 #A modifier
 
 ```{r}
-VlnPlot(data, features = c("CXCL9", "SPP1","COL1A1"))
+VlnPlot(data, features = c("CFD", "CXCL2","CCL19","LAD1","PACSIN1","TCL1A","UBE2C","CDC20"))
 ```
+Ainsi grâce au violon plot nous pouvons visualiser l'expression de ces différents gènes en fonction du groupe sur le cluster. Ainsi les gènes CFD et CXCL2 sont fortement exprimés dans le groupe 0. Le gène CCL19 à une expression un peu plus importante dans les groupe 0 et 1. Le gène LAD1 est fortement exprimé dans le groupe 1. Les gènes PACSIN1 et TCL1A sont fortement exprimé dans le groupe 2 et les gènes UBE2C et CDC20 sont fortement exprimés dans le groupe 3.
 
 ```{r}
-FeaturePlot(data, features=c("GZMB"))
+FeaturePlot(data, features=c("CFD", "CXCL2","CCL19","LAD1","PACSIN1","TCL1A","UBE2C","CDC20"))
 ```
-CD68 et CD14 spécifique des granulocytes et monocyte
+Lorsque nous effectuons cette visualisation sur l'UMAP nous pouvons observer les même tendance.
+Ainsi on peut déterminer d'après les résultats et la fontion des gènes les différents groupes immunitaires:
+  -Le groupe 0 (cluster 0) correspondrait aux macrophage, neutrophile et monocyte
+  -Le groupe 1 (cluster 1) correspondrait aux lymphocytes B
+  -Le groupe 2 (cluster 2) correspondrait aux cellules dendritiques 
+  -Le groupe 3 (cluster 3) correspondrait aux lymphocyte T
 
+Ainsi nous allons effectuer la représentation de ces groupes sur l'UMAP
+  
 ```{r}
-# Extraire les données de comptage normalisées
-counts <- as.matrix(GetAssayData(data, layer = "counts"))
-cluster.num <- as.numeric(Idents(data))
-
-# Utiliser SingleCellSignalR pour détecter les interactions
-LR.inter <- cell_signaling(counts, rownames(counts), cluster.num, c.names = new.cluster.ids)
-
-# Visualiser toutes les interactions ligand-récepteur
-visualize_interactions(LR.inter)
-
-# Visualiser les interactions spécifiques pour un cluster donné (par ex., "Cluster 1")
-#visualize_interactions(LR.inter, show.in = "C 1-C 3", "C 1-C 4")
-print(LR.inter)
-names(LR.inter)
+new.cluster.ids <- c("macrophage,neutrophile, monocyte", "lymphocyte B", "Cellules dendritique", "Lymphocyte T")
+names(new.cluster.ids) <- levels(data)
+pbmc <- RenameIdents(data, new.cluster.ids)
+DimPlot(pbmc, reduction="umap", label=TRUE, pt.size=0.5) + NoLegend()
 ```
+NOus allons ensuite regarder les interactions ligand-récepteur que ces popul existante entre 
+Une fois cela fait, installez le paquet SingleCellSignalR Bioconductor et déterminez les interactions ligand-récepteur que ces populations de cellules ont entre elles. Il y en aura beaucoup.
+
 
 ```{r}
 counts <- as.matrix(GetAssayData(object=data, slot="counts"))
@@ -181,7 +191,7 @@ ncounts[1:10,1:5]
 cluster.num <- as.numeric(Idents(data))
 LR.inter <- cell_signaling(ncounts, rownames(ncounts), cluster.num, c.names=new.cluster.ids)
 visualize_interactions(LR.inter)
-visualize_interactions(LR.inter, show.in=c("B-NK"))
+visualize_interactions(LR.inter, show.in=c("macrophage,neutrophile, monocyte"))
 
 ```
 
