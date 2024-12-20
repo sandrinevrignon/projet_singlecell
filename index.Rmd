@@ -210,4 +210,7 @@ En ce qui concerne CXCL9 nous pouvons observer que le niveau d'expression est un
 FeaturePlot(data, features=c("SPP1","CXCL9"))
 ```
 C'est résultat sont assez bien corrélé avec les résultats d'expression présente sur l'UMAP.
-Ainsi l'expression n'est pas forcément corrélé à un type cellulaire mais en lien avec les intéraction des autres populations. 
+Ainsi l'expression n'est pas forcément corrélé à un type cellulaire mais en lien avec les interaction des autres populations. 
+
+#Conclusion
+
