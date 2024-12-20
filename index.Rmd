@@ -2,7 +2,7 @@
 title: "projet_single_cell"
 author: "Rahma BAAZIZ & Sandrine VRIGNON"
 date: "2024-12-17"
-output: html_document
+output: pdf_document
 ---
 
 ## Installation library
@@ -153,7 +153,7 @@ Les marqueurs ainsi retrouvé sont les suivants:
   -TCL1A (T-cell Leukemia 1A): retrouvé dans les cellules dendritique
   -UBE2C (Ubiquitin-Conjugating Enzyme E2C): non spécifiques
   -CDC2 (Cell Division Cycle 2):retrouvé dans les cellules des lymphocytes T
-#A modifier
+
 
 ```{r}
 VlnPlot(data, features = c("CFD", "CXCL2","CCL19","LAD1","PACSIN1","TCL1A","UBE2C","CDC20"))
