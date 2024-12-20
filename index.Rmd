@@ -14,7 +14,7 @@ library(dplyr)
 library(Seurat)
 library (patchwork)
 library (devtools)
-library("BiocManager")
+library(BiocManager)
 BiocManager::install("SingleCellSignalR")
 library(SingleCellSignalR)
 
@@ -32,7 +32,7 @@ VlnPlot(data, features=c("nCount_RNA"), ncol=1)
 VlnPlot(data, features=c("percent.mt"), ncol=1)
 ```
 
-Pour l'ensemble des cellules analysées, nous pouvons observer que les effectifs sont relativement élevés sauf dans le cas de HN28 et HN7 qui ont des effectifs plus faibles et cela pour l'ensemble des échantillons. Nous pouvons également observer que les données sont relativement bien réparties pour l'ensemble des échantillons nous permettant de dire que les cellules analysés sont dans l'ensemble en bon état (vivante et présente). Cependant lorsque l'on regarde le pourcentage de mitochondrie pour l'échantillon HN7 celui-ci à un taux compris entre 5 et 15% avec un peu plus de cellules dégradées.
+Pour l'ensemble des cellules analysées, nous pouvons observer que les effectifs sont relativement élevés sauf dans le cas de HN28 et HN7 qui ont des effectifs plus faibles et cela pour l'ensemble des échantillons. Nous pouvons également observer que les données sont relativement bien réparties pour l'ensemble des échantillons nous permettant de dire que les cellules analysés sont dans l'ensemble en bon état (vivante et présente). Cependant, lorsque l'on regarde le pourcentage de mitochondrie pour l'échantillon HN7 celui-ci à un taux compris entre 5 et 15% avec un peu plus de cellules dégradées.
 
 ```{r}
 plot1 <- FeatureScatter(data, feature1="nCount_RNA", feature2="percent.mt")
@@ -40,7 +40,7 @@ plot2 <- FeatureScatter(data, feature1 = "nCount_RNA", feature2 = "nFeature_RNA"
 plot1+plot2
 ```
 
-Lorsque l'on combine les données en confondant les types cellulaires, on observe mieux certaines valeurs extrêmes. Etant donné que les données ont été précédemment manipulées lors de la normalisation, nous supposons que celles-ci ont également été filtré avant normalisation. Ainsi nous ne filtreront pas les données dans notre cas et prenons l'ensemble de ces données à cette étape.
+Lorsque l'on combine les données en confondant les types cellulaires, on observe mieux certaines valeurs extrêmes. Etant donné que les données ont été précédemment manipulées lors de la normalisation, nous supposons que celles-ci ont également été filtré avant normalisation. Ainsi nous ne filtreront pas les données dans notre cas et prendrons l'ensemble de ces données à cette étape.
 
 ## Recherche de marqueur de type cellulaire
 
@@ -85,7 +85,7 @@ DimPlot(data, reduction="pca")
 
 A travers ce graphique toutes les données sont représentées avec un mélange indistinct des types cellulaires. Ici, aucun groupe n'est clairement mis en évidence.
 
-Afin de pouvoir effectuer une meilleure visualisation nous effectuons une clusterisation des données
+Afin de pouvoir effectuer une meilleure visualisation, nous effectuons une clusterisation des données.
 
 ## Clustering
 
@@ -103,7 +103,7 @@ data <- RunUMAP(data, dims=1:10)
 DimPlot(data, reduction="umap")
 ```
 
-Cette représentation permet de distinguer différents types cellulaires répartis le long des deux dimensions de la représentation UMAP. Un groupe en particulier se détache des autres (6) et semble être différents. Malgrè cela les types cellulaires même regroupé semble se distinguer. Afin que le traitement des données soit plus simple, nous avons décider de réduire nos données en 4 clusters.
+Cette représentation permet de distinguer différents types cellulaires répartis le long des deux dimensions de la représentation UMAP. Un groupe en particulier se détache des autres (6) et semble être différent. Malgré cela, les types cellulaires même regroupés semblent se distinguer. Afin que le traitement des données soit plus simple, nous avons décidé de réduire nos données en 4 clusters.
 
 ## Affichage en fonction de 4 clusters
 
@@ -119,9 +119,9 @@ DimPlot(data, reduction = "umap", group.by = "seurat_clusters")
 DimPlot(data, reduction = "pca", group.by = "seurat_clusters")
 ```
 
-Nous pouvons ainsi observer sur l'ACP que parmis les 4 clusters sélectionnés nous distinguons 3 types cellulaires qui se répartissent en 3 groupes (0, 1 et 2) le quatrième groupe (3) se confondant aux 3 autres. Lorsque l'on regarde cette représentation en format UMAP nous pouvons observer 4 groupes bien distincts. Les types cellulaires 0,1 et 2 étant très proche l'un des autres et le cluster 3 qui est excentré par rapport à ce groupe.
+Nous pouvons ainsi observer sur l'ACP que parmis les 4 clusters sélectionnés, nous distinguons 3 types cellulaires qui se répartissent en 3 groupes (0, 1 et 2) le quatrième groupe (3) se confondant aux 3 autres. Lorsque l'on regarde cette représentation en format UMAP nous pouvons observer 4 groupes bien distincts. Les types cellulaires 0,1 et 2 sont très proches les uns des autres et le cluster 3 qui est excentré par rapport à ce groupe.
 
-Etant données que nous disposons de groupe distinct au sein de l'UMAP nous allons ensuite chercher les gènes spécifiques à chacun de ces groupes afin de pouvoir identifier les types cellulaires présents
+Etant donné que nous disposons de groupes distincts au sein de l'UMAP, nous allons ensuite chercher les gènes spécifiques à chacun de ces groupes afin d'identifier les types cellulaires présents
 
 ## Détermination des gènes spécifique à chaque groupe
 
@@ -130,9 +130,19 @@ cluster2.markers <- FindMarkers(data, ident.1=2, min.pct=0.25)
 head(cluster2.markers, n=5)
 ```
 
-Ainsi parmi les gènes déterminé nous retrouvons les gènes suivants: - GZMB: (Granzime B) qui est exprimé par les lymphocytes T cytotoxique (CTL) et les cellules NK (Natural Killers) - JCHAIN (chaîne de jonction): qui est composant protéique exprimé pour les immunoglobuline. -LILRA4 (Leukocyte immunoglobulin-like receptor subfamily A member 4) : gène qui est préférentiellement exprimée chez les leucocytes et plus directement les macrophages. -ITM2C (Integral Membrane Protein 2C): intervient dans la signalisation cellulaire et la régulation de la réponse immunitaire TSPAN13 (Tetraspanin-13): joue un rôle dans la modulation de la signalisation cellulaire, l'adhésion et la migration des cellules immunitaires
+Ainsi parmi les gènes déterminés, nous retrouvons les gènes suivants :
 
-C'est gènes nous permettent ainsi de mettre en évidence à quel groupe immunitaire appartiennent chaque type cellulaire de notre UMAP. Cependant seule il ne sont pas spécifiques à nos groupe et il faut que nous recherchions des marqueurs de ces gènes pour l'ensemble de notre population nous permettant de définir les types cellulaires spécifiques à nos groupe.
+\- GZMB : (Granzime B) qui est exprimé par les lymphocytes T cytotoxique (CTL) et les cellules NK (Natural Killers)
+
+\- JCHAIN (chaîne de jonction) : qui est composant protéique exprimé pour les immunoglobuline.
+
+-LILRA4 (Leukocyte immunoglobulin-like receptor subfamily A member 4) : gène qui est préférentiellement exprimée chez les leucocytes et plus directement les macrophages.
+
+-ITM2C (Integral Membrane Protein 2C) : intervient dans la signalisation cellulaire et la régulation de la réponse immunitaire.
+
+-TSPAN13 (Tetraspanin-13) : joue un rôle dans la modulation de la signalisation cellulaire, l'adhésion et la migration des cellules immunitaires.
+
+Ces gènes nous permettent ainsi de mettre en évidence à quel groupe immunitaire appartiennent chaque type cellulaire de notre UMAP. Cependant seuls, ils ne sont pas spécifiques à nos groupes et il faut que nous recherchions des marqueurs de ces gènes pour l'ensemble de notre population nous permettant de définir les types cellulaires spécifiques à nos groupes.
 
 ## Recherche des marqueurs de gène pour l'ensemble des populations
 
@@ -146,19 +156,43 @@ data.markers %>%
   slice_max(n=2, order_by=avg_log2FC)
 ```
 
-Les marqueurs ainsi retrouvé sont les suivants: -CFD (Complement Factor D): retrouvé dans les macrophages, neutrophiles et cellules endothéliales. -CXCL2 (C-X-C Motif Chemokine Ligand 2): retrouvé dans les Neutrophiles, monocytes, et macrophages. -CCL19 (C-C Motif Chemokine Ligand 19): retrouvé dans Lymphocytes T, cellules dendritiques, et lymphocytes B -LAD1 (Leukocyte Adhesion Deficiency 1): retrouvé dans les leucocytes -PACSIN1 (Protein Kinase C and Casein Kinase Substrate In Neurons 1): retrouvé dans les macrophages, dendritiques. -TCL1A (T-cell Leukemia 1A): retrouvé dans les cellules dendritique -UBE2C (Ubiquitin-Conjugating Enzyme E2C): non spécifiques -CDC2 (Cell Division Cycle 2):retrouvé dans les cellules des lymphocytes T
+Les marqueurs ainsi retrouvés sont les suivants:
+
+-CFD (Complement Factor D) : présent dans les macrophages, neutrophiles et cellules endothéliales.
+
+-CXCL2 (C-X-C Motif Chemokine Ligand 2) : présent dans les Neutrophiles, monocytes, et macrophages.
+
+-CCL19 (C-C Motif Chemokine Ligand 19) : présent dans Lymphocytes T, cellules dendritiques, et lymphocytes B
+
+-LAD1 (Leukocyte Adhesion Deficiency 1) : présent dans les leucocytes
+
+-PACSIN1 (Protein Kinase C and Casein Kinase Substrate In Neurons 1) : présent dans les macrophages, dendritiques.
+
+-TCL1A (T-cell Leukemia 1A) : présent dans les cellules dendritique
+
+-UBE2C (Ubiquitin-Conjugating Enzyme E2C) : non spécifique.
+
+-CDC2 (Cell Division Cycle 2) : présent dans les cellules des lymphocytes T.
 
 ```{r}
 VlnPlot(data, features = c("CFD", "CXCL2","CCL19","LAD1","PACSIN1","TCL1A","UBE2C","CDC20"))
 ```
 
-Ainsi grâce au violon plot nous pouvons visualiser l'expression de ces différents gènes en fonction du groupe sur le cluster. Ainsi les gènes CFD et CXCL2 sont fortement exprimés dans le groupe 0. Le gène CCL19 à une expression un peu plus importante dans les groupe 0 et 1. Le gène LAD1 est fortement exprimé dans le groupe 1. Les gènes PACSIN1 et TCL1A sont fortement exprimé dans le groupe 2 et les gènes UBE2C et CDC20 sont fortement exprimés dans le groupe 3.
+Ainsi grâce au violon plot nous pouvons visualiser l'expression de ces différents gènes en fonction du groupe sur le cluster. Ainsi les gènes CFD et CXCL2 sont fortement exprimés dans le groupe 0. Le gène CCL19 présente une expression un peu plus importante dans les groupes 0 et 1. Le gène LAD1 est fortement exprimé dans le groupe 1. Les gènes PACSIN1 et TCL1A sont fortement exprimés dans le groupe 2 et les gènes UBE2C et CDC20 sont fortement exprimés dans le groupe 3.
 
 ```{r}
 FeaturePlot(data, features=c("CFD", "CXCL2","CCL19","LAD1","PACSIN1","TCL1A","UBE2C","CDC20"))
 ```
 
-Lorsque nous effectuons cette visualisation sur l'UMAP nous pouvons observer les même tendance. Ainsi on peut déterminer d'après les résultats et la fontion des gènes les différents groupes immunitaires: -Le groupe 0 (cluster 0) correspondrait aux macrophage, neutrophile et monocyte -Le groupe 1 (cluster 1) correspondrait aux lymphocytes B -Le groupe 2 (cluster 2) correspondrait aux cellules dendritiques -Le groupe 3 (cluster 3) correspondrait aux lymphocyte T
+Lorsque nous effectuons cette visualisation sur l'UMAP nous pouvons observer les même tendance. Ainsi on peut déterminer d'après les résultats et la fontion des gènes les différents groupes immunitaires:
+
+-Le groupe 0 (cluster 0) correspondrait aux macrophages, neutrophiles et monocytes
+
+-Le groupe 1 (cluster 1) correspondrait aux lymphocytes B
+
+-Le groupe 2 (cluster 2) correspondrait aux cellules dendritiques
+
+-Le groupe 3 (cluster 3) correspondrait aux lymphocytes T
 
 Ainsi nous allons effectuer la représentation de ces groupes sur l'UMAP
 
@@ -169,7 +203,7 @@ data <- RenameIdents(data, new.cluster.ids)
 DimPlot(data, reduction="umap", label=TRUE, pt.size=0.5) + NoLegend()
 ```
 
-NOus allons ensuite regarder les interactions ligand-récepteur que ces populations de cellules ont entre elles.
+Nous allons ensuite étudier les interactions ligand-récepteur que ces populations de cellules ont entre elles.
 
 ## Interaction ligand-récepteur
 
@@ -185,7 +219,7 @@ visualize_interactions(LR.inter)
 
 ```
 
-Nous pouvons observer ici de nombreuses interactions entre les différents types cellulaires. Les interactions les plus importantes sont celle entre les lymphocyte T et les cellumes dendritiques qui sont fortement liées (36) suivi des interaction entre les lymphocyte T et le reste des types cellulaire (Lymphocyte B et macrophage) où on peut en dénombrer 19 interactions.
+Nous pouvons observer ici de nombreuses interactions entre les différents types cellulaires. Les interactions les plus importantes sont celles entre les lymphocytes T et les cellules dendritiques qui sont fortement liées (36) suivi des interactions entre les lymphocytes T et les autres types cellulaires (Lymphocytes B et macrophages) pour lesquels on peut dénombrer 19 interactions.
 
 ## Analyse de l'expression sur les macrophages SPP1 et CXCL9
 
@@ -193,12 +227,12 @@ Nous pouvons observer ici de nombreuses interactions entre les différents types
 VlnPlot(data, features = c("SPP1", "CXCL9"))
 ```
 
-En limitant l'analyse uniquement à ces deux gènes nous pouvons observer que SPP1 possède un niveau d'expression très élevé au niveau des macrophage et des Lymphocyte T. Ces résultats pouvant être expliqué par l'interaction que nous avons entre les 2 populations. En ce qui concerne CXCL9 nous pouvons observer que le niveau d'expression est un peu plus élevé au niveau des macrophage.
+En limitant l'analyse uniquement à ces deux gènes, nous pouvons observer que SPP1 possède un niveau d'expression très élevé au niveau des macrophages et des Lymphocytes T. Ces résultats pouvant être expliqués par l'interaction que nous avons entre les 2 populations. En ce qui concerne CXCL9 nous pouvons observer que le niveau d'expression est un peu plus élevé au niveau des macrophages.
 
 ```{r}
 FeaturePlot(data, features=c("SPP1","CXCL9"))
 ```
 
-C'est résultat sont assez bien corrélé avec les résultats d'expression présente sur l'UMAP. Ainsi l'expression n'est pas forcément corrélé à un type cellulaire mais en lien avec les interaction des autres populations.
+Ces résultats sont assez bien corrélés avec les résultats d'expression présents sur l'UMAP. Ainsi l'expression n'est pas forcément corrélée à un type cellulaire mais en lien avec les interaction des autres populations.
 
 ## Conclusion
