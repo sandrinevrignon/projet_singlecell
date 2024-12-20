@@ -175,11 +175,12 @@ Ainsi nous allons effectuer la représentation de ces groupes sur l'UMAP
 ```{r}
 new.cluster.ids <- c("macrophage,neutrophile, monocyte", "lymphocyte B", "Cellules dendritique", "Lymphocyte T")
 names(new.cluster.ids) <- levels(data)
-pbmc <- RenameIdents(data, new.cluster.ids)
-DimPlot(pbmc, reduction="umap", label=TRUE, pt.size=0.5) + NoLegend()
+data <- RenameIdents(data, new.cluster.ids)
+DimPlot(data, reduction="umap", label=TRUE, pt.size=0.5) + NoLegend()
 ```
-NOus allons ensuite regarder les interactions ligand-récepteur que ces popul existante entre 
-Une fois cela fait, installez le paquet SingleCellSignalR Bioconductor et déterminez les interactions ligand-récepteur que ces populations de cellules ont entre elles. Il y en aura beaucoup.
+NOus allons ensuite regarder les interactions ligand-récepteur que ces populations de cellules ont entre elles.
+
+#Interaction ligand récepteur
 
 
 ```{r}
@@ -194,8 +195,19 @@ visualize_interactions(LR.inter)
 visualize_interactions(LR.inter, show.in=c("macrophage,neutrophile, monocyte"))
 
 ```
+Nous pouvons observer ici de nombreuses interactions entre les différents types cellulaires. Les interactions les plus importantes sont celle entre les lymphocyte T et les cellumes dendritiques qui sont fortement liées (36) suivi des interaction entre les lymphocyte T et le reste des types cellulaire (Lymphocyte B et macrophage) où on peut en dénombrer 19 interactions. 
 
-se di que les 4 groupes sont répartie de
 
-En combinaison avec le % de lectures mitochondriales, l'élimination des valeurs aberrantes de ces groupes permet de supprimer la plupart des doublets/cellules mortes/gouttelettes vides, ce qui explique pourquoi le filtrage est une étape de prétraitement courante.
+#Analyse de l'expression sur les macrophages SPP1 et CXCL9
 
+```{r}
+VlnPlot(data, features = c("SPP1", "CXCL9"))
+```
+En limitant l'analyse uniquement à ces deux gènes nous pouvons observer que SPP1 possède un niveau d'expression très élevé au niveau des macrophage et des Lymphocyte T. Ces résultats pouvant être expliqué par l'interaction que nous avons entre les 2 populations. 
+En ce qui concerne CXCL9 nous pouvons observer que le niveau d'expression est un peu plus élevé au niveau des macrophage.
+
+```{r}
+FeaturePlot(data, features=c("SPP1","CXCL9"))
+```
+C'est résultat sont assez bien corrélé avec les résultats d'expression présente sur l'UMAP.
+Ainsi l'expression n'est pas forcément corrélé à un type cellulaire mais en lien avec les intéraction des autres populations. 
