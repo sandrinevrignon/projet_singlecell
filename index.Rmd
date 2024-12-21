@@ -44,7 +44,7 @@ Lorsque l'on combine les données en confondant les types cellulaires, on observ
 
 ## Recherche de marqueur de type cellulaire
 
-Afin de pouvoir déterminer les populations cellulaires spécifiques, nous recherchons les gènes avec une variabilité d'expression spécifique en fonction de la population cellulaire analysée. Nous avons choisi de garder les paramètres par défaut utilisant les 2000 caractéristiques de gène. La raison est que nous sommes entrain de travailler avec des données standards et déjà normalisés donc un ajustement n'est pas nécessaire Ensuite nous nous limitons aux 15 premiers gènes les plus variables identifiés entre les cellules car elles sont souvent associés à des processus biologiques spécifiques et donc à l'identification des types cellulaires.
+Afin de pouvoir déterminer les populations cellulaires spécifiques, nous recherchons les gènes avec une variabilité d'expression spécifique en fonction de la population cellulaire analysée. Nous avons choisi de garder les paramètres par défaut utilisant les 2000 caractéristiques de gène. La raison est que nous sommes entrain de travailler avec des données standards et déjà normalisés donc un ajustement n'est pas nécessaire. Ensuite nous nous limitons aux 15 premiers gènes les plus variables identifiés entre les cellules car elles sont souvent associés à des processus biologiques spécifiques et donc à l'identification des types cellulaires.
 
 ```{r}
 data <- FindVariableFeatures(data, nfeatures=2000)
@@ -63,7 +63,7 @@ plot2
 
 A travers ce graphique, nous pouvons ainsi observer que les marqueurs sélectionnés présentent bien des différences d'expression en fonction de la population cellulaire avec une variance résiduelle supérieure à 800 dans le cas de COL1A1 et des moyennes géométiques d'expression supérieures à 10. Ce graphique nous permet ainsi de dire que la valeur par défaut de 2000 gènes variables est pertinente pour mettre en évidence la différence d'expression entre les types cellulaires car on voit qu'ils ont une variance résiduelle élevée.
 
-Ces données vont ainsi être utilisées afin de permettre les analyses multiples et déterminer les caractéristiques de nos populations cellulaires *via* une ACP (Analyse en Composantes Principales) dans un premier temps.
+Ces données vont ainsi être utilisées afin de permettre les analyses multiples et déterminer les caractéristiques de nos populations cellulaires *via* une ACP (Analyse en Composantes Principales) dans un premier temps puis une représentation UMAP dans un second temps.
 
 ## ACP
 
@@ -77,7 +77,7 @@ data <- ScaleData(data, features=all.genes)
 data <- RunPCA(data, features=VariableFeatures(data), ndims.print=1:3, nfeatures.print=10)
 ```
 
-Avant d'être projeté à travers un graphique. contenant les deux premières composantes
+Avant d'être projeté à travers un graphique contenant les deux premières composantes
 
 ```{r}
 DimPlot(data, reduction="pca")
@@ -119,7 +119,7 @@ DimPlot(data, reduction = "umap", group.by = "seurat_clusters")
 DimPlot(data, reduction = "pca", group.by = "seurat_clusters")
 ```
 
-Nous pouvons ainsi observer sur l'ACP que parmis les 4 clusters sélectionnés, nous distinguons 3 types cellulaires qui se répartissent en 3 groupes (0, 1 et 2) le quatrième groupe (3) se confondant avec le cluster 0 et 1. Lorsque l'on regarde cette représentation en format UMAP nous pouvons observer 4 groupes bien distincts. Les types cellulaires 0,1 et 2 sont très proches les uns des autres et le cluster 2 qui est excentré par rapport à ce groupe.
+Nous pouvons ainsi observer sur l'ACP que parmis les 4 clusters sélectionnés, nous distinguons 3 types cellulaires qui se répartissent en 3 groupes (0, 1 et 2) le quatrième groupe (3) se confondant avec le cluster 0 et 1. Lorsque l'on regarde cette représentation en format UMAP nous pouvons observer 4 groupes bien distincts. Les types cellulaires 0,1 et 2 sont très proches les uns des autres et le cluster 2 est excentré par rapport à ce groupe.
 
 Etant donné que nous disposons de groupes distincts au sein de l'UMAP, nous allons ensuite chercher les gènes spécifiques à chacun de ces groupes afin d'identifier les types cellulaires présents
 
@@ -142,7 +142,7 @@ Ainsi parmi les gènes déterminés, nous retrouvons les gènes suivants :
 
 -TSPAN13 (Tetraspanin-13) : joue un rôle dans la modulation de la signalisation cellulaire, l'adhésion et la migration des cellules immunitaires (<https://www.ncbi.nlm.nih.gov/>).
 
-Ces gènes nous permettent ainsi de mettre en évidence à quel groupe immunitaire appartiennent chaque type cellulaire de notre UMAP. Cependant seuls, ils ne sont pas spécifiques à nos groupes et il faut que nous recherchions des marqueurs de ces gènes pour l'ensemble de notre population nous permettant de définir les types cellulaires spécifiques à nos groupes.
+Ces gènes pourrait nous permettre ainsi de mettre en évidence à quel groupe immunitaire appartiennent chaque type cellulaire de notre UMAP. Cependant seuls, ils ne sont pas spécifiques à nos groupes et il faut que nous recherchions des marqueurs de ces gènes spécifiquement exprimés pour l'ensemble de notre population nous permettant de définir les types cellulaires spécifiques à nos groupes.
 
 ## Recherche des marqueurs de gène pour l'ensemble des populations
 
@@ -233,10 +233,10 @@ En limitant l'analyse uniquement à ces deux gènes, nous pouvons observer que S
 FeaturePlot(data, features=c("SPP1","CXCL9"))
 ```
 
-Ces résultats sont assez bien corrélés avec les résultats d'expression présents sur l'UMAP. On peut également constater à travers cette représentation que ces marqueurs spécifiques des macrophages sont localisés en très grande majorité dans la région inferieure du cluster. Ainsi l'identification de l'expression des gènes spécifiques met non seulement en évidence les types cellulaires mais aussi les interactions entre plusieurs types cellulaires qui sont influencés par ces expressions.
+Ces résultats sont assez bien corrélés avec les résultats d'expression présents sur l'UMAP. On peut également constater à travers cette représentation que ces marqueurs spécifiques des macrophages sont localisés en très grande majorité dans la région inférieure du cluster. Ainsi l'identification de l'expression des gènes spécifiques met non seulement en évidence les types cellulaires mais aussi les interactions entre plusieurs types cellulaires qui sont influencés par ces expressions.
 
 ## Conclusion
 
-Cette analyse a permis de caractériser des populations cellulaires et leurs interactions à partir de données normalisées. En identifiant 2000 gènes les plus variables, nous avons pu distinguer quatre clusters principaux, visualisés via UMAP. Les marqueurs spécifiques (ex. CFD, CXCL2) ont permis d’annoter les types cellulaires, notamment les macrophages, identifiés grâce à l'expression de SPP1 et CXCL9.
+Cette analyse a permis de caractériser des populations cellulaires et leurs interactions à partir de données normalisées. En identifiant 2000 gènes les plus variables, nous avons pu distinguer quatre clusters principaux, visualisés *via* une représentation UMAP. Les marqueurs spécifiques (ex. CFD, CXCL2) ont permis d’annoter les types cellulaires, notamment les macrophages ou l'identifiés a été confirmé grâce à l'expression de SPP1 et CXCL9 (gènes caractéristiques de ces types immunitaires).
 
 L’analyse des interactions ligand-récepteur a révélé des échanges significatifs entre clusters, illustrant la communication intercellulaire. Ces résultats montrent que l'expression des gènes spécifiques permet de différencier les types cellulaires et de comprendre leurs interactions.
